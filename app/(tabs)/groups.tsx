@@ -1,31 +1,77 @@
-import { StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, ScrollView, ActivityIndicator, StyleSheet, Text } from 'react-native';
+import CardGroup from '@/components/GroupCard'; 
 
-import EditScreenInfo from '@/components/EditScreenInfo';
-import { Text, View } from '@/components/Themed';
+type Group = {
+  id: number;
+  nombre: string;
+  descripcion: string;
+};
 
-export default function Groups() {
+const GroupsScreen: React.FC = () => {
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchGroups = async () => {
+      try {
+        const response = await fetch('https://0.0.0.0:8000/');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data: Group[] = await response.json();
+        setGroups(data);
+      } catch (err) {
+        setError('Error al cargar los grupos');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchGroups();
+  }, []);
+
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.center}>
+        <Text style={styles.errorText}>{error}</Text>
+      </View>
+    );
+  }
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Groups tab</Text>
-      <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
-      <EditScreenInfo path="app/(tabs)/groups.tsx" />
-    </View>
+    <ScrollView>
+      {groups.map((group) => (
+        <CardGroup
+          key={group.id}
+          id={group.id}
+          nombre={group.nombre}
+          descripcion={group.descripcion}
+        />
+      ))}
+    </ScrollView>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  container: {
+  center: {
     flex: 1,
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
   },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  separator: {
-    marginVertical: 30,
-    height: 1,
-    width: '80%',
+  errorText: {
+    color: 'red',
+    fontSize: 16,
   },
 });
+
+export default GroupsScreen;
