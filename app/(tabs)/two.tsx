@@ -3,12 +3,12 @@ import { StyleSheet } from 'react-native';
 import EditScreenInfo from '@/components/EditScreenInfo';
 import { Text, View } from '@/components/Themed';
 
+import Card from '@/components/Card'
+
 export default function TabTwoScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Matches</Text>
-      <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
-      <EditScreenInfo path="app/(tabs)/two.tsx" />
+      <Card tittle={'Mohitos en la playa'} ></Card>
     </View>
   );
 }
@@ -28,4 +28,7 @@ const styles = StyleSheet.create({
     height: 1,
     width: '80%',
   },
+  button: {
+
+  }
 });
