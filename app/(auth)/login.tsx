@@ -19,7 +19,9 @@ import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { Feather } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Constants from "expo-constants";
 
+const apiUrl = Constants.expoConfig?.extra?.API_URL;
 const LoginScreen = () => {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -27,15 +29,14 @@ const LoginScreen = () => {
   const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async () => {
-    router.push("/(tabs)");
-
+    router;
     if (!email || !password) {
       Alert.alert("Error", "Please fill in all fields.");
       return;
     }
 
     try {
-      const response = await fetch("http://10.195.30.219:8000/users/login", {
+      const response = await fetch(`${apiUrl}/users/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
