@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Text, View } from '@/components/Themed';
 import Card from '@/components/Card';
 
-export default function TabTwoScreen() {
+export default function Swap() {
   const [cards, setCards] = useState<{ id: number, tittle: string; image: string }[]>([]);
 
   const countRef = useRef(0); 
@@ -50,6 +50,7 @@ export default function TabTwoScreen() {
       <Text style={{position: 'absolute', top:42, fontWeight:"700", fontSize:32}}> 🔥Book your match🔥</Text>
       {cards.map((element, index) => (
         <Card
+        identifier={element.id}
         key={countRef.current += 1}
         tittle={element.tittle}
         img={element.image}

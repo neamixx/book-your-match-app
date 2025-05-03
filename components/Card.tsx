@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Animated, PanResponder, Easing, GestureResponderEvent, PanResponderGestureState, ViewStyle, StyleProp } from 'react-native';
+import { Animated, PanResponder, Easing, GestureResponderEvent, PanResponderGestureState, ViewStyle, StyleProp, Alert } from 'react-native';
 import {
   StyleSheet,
   Dimensions,
@@ -9,6 +9,10 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+import Constants from "expo-constants";
+const apiUrl = Constants.expoConfig?.extra?.API_URL;
 
 const { width, height } = Dimensions.get('window');
 
@@ -18,7 +22,7 @@ type CardData = {
   image: string;
 };
 
-const Card = ({ tittle, img, offset, onExit}: { tittle: String, img: String, offset: number, onExit: () => void;}) => {
+const Card = ({ identifier, tittle, img, offset, onExit}: {identifier: Number, tittle: String, img: String, offset: number, onExit: () => void;}) => {
   const [card, setCard] = useState<CardData | null>(null);
   const position = useRef(new Animated.ValueXY()).current;
 
@@ -85,11 +89,36 @@ const Card = ({ tittle, img, offset, onExit}: { tittle: String, img: String, off
     ).current;
 
 
+  const post_request = async (agreeded: Boolean) => {
+    const email = await AsyncStorage.getItem("userEmail")
+    const json = {
+      user_email: email,
+      card_id: identifier,
+      agreeded: agreeded
+    }
+
+    try {
+      const response = await fetch(`${apiUrl}/card`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(json),
+      });
+      if (!response.ok) {
+        Alert.alert("Error", "Something went wrong with the query!");
+      }
+    } catch {
+      Alert.alert("Error", "Could not connect to the server!");
+    }
+  }
 
   const handleAccept = () => {
+    post_request(true)
     onExit();
   }
   const handleReject = () => {
+    post_request(false)
     onExit();
   }
 
