@@ -9,6 +9,7 @@ const { width } = Dimensions.get('window');
 const {  height } = Dimensions.get('window');
 
 type card = {
+    id: Number,
     tittle: string,
     image: string,
 }
