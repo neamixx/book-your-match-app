@@ -22,12 +22,27 @@ export default function Card() {
   const [card, setCard] = useState<CardData | null>(null);
   const [loading, setLoading] = useState(true);
 
+
+
   const position = useRef(new Animated.ValueXY()).current;
   const rotate = position.x.interpolate({
         inputRange: [-200, 0, 200],
         outputRange: ['-15deg', '0deg', '15deg'],
         extrapolate: 'clamp',
     });
+
+    const colorAccept = position.x.interpolate({
+        inputRange: [0, 120],
+        outputRange: ['rgb(78, 78, 78)', 'rgb(0, 255, 0)'],
+        extrapolate: 'clamp',
+    });
+
+    const colorReject = position.x.interpolate({
+        inputRange: [-120, 0],
+        outputRange: ['rgb(226, 8, 8)', 'rgb(78, 78, 78)'],
+        extrapolate: 'clamp',
+    });
+
     const panResponder = useRef(
     PanResponder.create({
         onMoveShouldSetPanResponder: () => true,
@@ -41,16 +56,16 @@ export default function Card() {
         },
         onPanResponderMove: Animated.event(
         [null, { dx: position.x, dy: position.y }],
-        { 
-            useNativeDriver: false,
-            listener(event) {
-                console.log("hola")
-            },
-        }
+        { useNativeDriver: false, }
         ),
         onPanResponderRelease: (e: GestureResponderEvent, gesture: PanResponderGestureState) => {
         console.log('Released', gesture.dx, gesture.dy);
-
+        console.log("hola")
+          if (gesture.dx > 120){
+            handleAccept()
+          } else if (gesture.dx < -120) {
+            handleReject()
+          }
         // Optional: reset or swipe logic
         Animated.spring(position, {
             toValue: { x: 0, y: 0 },
@@ -106,8 +121,8 @@ export default function Card() {
         <Text style={styles.title}>{loading ? 'Loading...' : card?.tittle}</Text>
 
         <View style={styles.buttonRow}>
-          <CardButton col="#ee2222" icon="close" onPress={handleReject} />
-          <CardButton col="#22ee22" icon="heart" onPress={handleAccept} />
+          <CardButton col={colorReject} icon="close" onPress={handleReject} />
+          <CardButton col={colorAccept} icon="heart" onPress={handleAccept} />
         </View>
       </View>
     </Animated.View>
