@@ -14,6 +14,8 @@ import { useGroups } from "@/hooks/useGroups";
 import CreateGroupModal from "@/components/CreateGroupModal";
 import { useJoiningGroup } from "@/hooks/useJoiningGroup";
 import InvitationModal from "@/components/InivationModal";
+import { router } from "expo-router";
+import CreateJoinModal from "@/components/CreateJoinGroup";
 
 const GroupsScreen: React.FC = () => {
   const { groups, loading, error, refetch } = useGroups();
@@ -21,7 +23,8 @@ const GroupsScreen: React.FC = () => {
   const [joinCode, setJoinCode] = useState<string>("");
   const [modalVisible, setModalVisible] = useState(false);
   const [invitationModalVisible, setInvitationModalVisible] = useState(false);
-
+  const [shareCode, setShareCode] = useState(0);
+  const [createJoinVisibility, setCreateJoinVisibility] = useState(false);
   const handleClosingModal = async () => {
     console.log("xd");
     setModalVisible(false);
@@ -55,16 +58,25 @@ const GroupsScreen: React.FC = () => {
     <View style={{ flex: 1, backgroundColor: "#ffffff" }}>
       <InvitationModal
         visible={invitationModalVisible}
-        code={"04343"}
+        code={shareCode}
         onClose={() => setInvitationModalVisible(false)}
       />
 
       <CreateGroupModal
+        updateCode={setShareCode}
         visible={modalVisible}
         onCreated={handleClosingModal}
         refi={refetch}
         onClose={() => setModalVisible(false)}
       />
+      <CreateJoinModal
+        visible={createJoinVisibility}
+        onClose={() => setCreateJoinVisibility(false)}
+        onCreatePressed={() => {
+          setCreateJoinVisibility(false);
+          setModalVisible(true);
+        }}
+      ></CreateJoinModal>
 
       {groups.length > 0 ? (
         <>
@@ -75,13 +87,21 @@ const GroupsScreen: React.FC = () => {
                 id={group.id}
                 name={group.name}
                 description={group.description}
+                onPress={() => {
+                  console.log(`Navegant al grup: ${group.name}`);
+                  //router.push(`/group/${group.id}`);
+                  router.push({
+                    pathname: `/group/[id]`,
+                    params: { id: group.id },
+                  });
+                }}
               />
             ))}
           </ScrollView>
 
           <TouchableOpacity
             style={styles.fabContainer}
-            onPress={handleCreateGroup}
+            onPress={() => setCreateJoinVisibility(true)}
           >
             <LinearGradient
               colors={["#2196F3", "#0D47A1"]}
@@ -96,7 +116,7 @@ const GroupsScreen: React.FC = () => {
       ) : (
         <View style={styles.center}>
           <Text style={styles.emptyText}>
-            Encara no estàs a cap grup. Crea'n un
+            You're not in any group yet. Create one.
           </Text>
 
           <TouchableOpacity onPress={() => setModalVisible(true)}>
@@ -106,15 +126,15 @@ const GroupsScreen: React.FC = () => {
               end={{ x: 1, y: 1 }}
               style={styles.button}
             >
-              <Text style={styles.buttonText}>Crear grup</Text>
+              <Text style={styles.buttonText}>Create group</Text>
             </LinearGradient>
           </TouchableOpacity>
 
-          <Text style={styles.emptyText}>o uneix-te amb un codi!</Text>
+          <Text style={styles.emptyText}>or join with a code!</Text>
 
           <TextInput
             style={styles.input}
-            placeholder="Introdueix un codi (6 dígits)"
+            placeholder="Insert the code"
             keyboardType="numeric"
             maxLength={6}
             value={joinCode}
@@ -128,7 +148,7 @@ const GroupsScreen: React.FC = () => {
               end={{ x: 1, y: 1 }}
               style={styles.button}
             >
-              <Text style={styles.buttonText}>Unir-se al grup</Text>
+              <Text style={styles.buttonText}>Join group</Text>
             </LinearGradient>
           </TouchableOpacity>
 

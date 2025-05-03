@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Modal,
   View,
@@ -9,9 +9,12 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  Dimensions,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { Feather } from "@expo/vector-icons";
+import { Feather, MaterialIcons } from "@expo/vector-icons";
 import DatePicker from "./DatePicker";
 import { useGroupCreation } from "@/hooks/useGroupCreation";
 
@@ -20,13 +23,18 @@ type CreateGroupModalProps = {
   onClose: () => void;
   onCreated: () => void;
   refi: () => void;
+  updateCode: React.Dispatch<React.SetStateAction<number>>;
 };
+
+// Sample cities array
+const CITIES = ["Barcelona", "Madrid", "Valencia", "bb", "nasddsfdf"];
 
 export default function CreateGroupModal({
   visible,
   onClose,
   onCreated,
   refi,
+  updateCode,
 }: CreateGroupModalProps) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -35,20 +43,100 @@ export default function CreateGroupModal({
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
 
-  const handleGroupCreation = () => {
+  // City autocomplete state
+  const [city, setCity] = useState("");
+  const [filteredCities, setFilteredCities] = useState<string[]>([]);
+  const [showCityDropdown, setShowCityDropdown] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState<"bottom" | "top">(
+    "bottom"
+  );
+  const scrollViewRef = useRef<ScrollView>(null);
+  const cityInputRef = useRef<View>(null);
+
+  // Filter cities based on input
+  useEffect(() => {
+    if (city) {
+      const filtered = CITIES.filter((item) =>
+        item.toLowerCase().includes(city.toLowerCase())
+      );
+      setFilteredCities(filtered);
+    } else {
+      setFilteredCities([]);
+    }
+  }, [city]);
+
+  // Handle city input change
+  const handleCityChange = (text: string) => {
+    setCity(text);
+    setShowCityDropdown(text.length > 0);
+  };
+
+  // Handle city selection
+  const handleCitySelect = (selectedCity: string) => {
+    setCity(selectedCity);
+    setShowCityDropdown(false);
+    Keyboard.dismiss();
+  };
+
+  // Handle focus on city input
+  const handleCityFocus = () => {
+    // Measure the position of the input to determine if we have enough space below
+    if (cityInputRef.current) {
+      cityInputRef.current.measure((x, y, width, height, pageX, pageY) => {
+        const screenHeight = Dimensions.get("window").height;
+        const keyboardHeight = Platform.OS === "ios" ? 300 : 250; // Estimated keyboard height
+        const availableSpace = screenHeight - pageY - height - keyboardHeight;
+
+        // If we don't have enough space below, show dropdown above
+        if (availableSpace < 150) {
+          setDropdownPosition("bottom");
+        } else {
+          setDropdownPosition("bottom");
+        }
+
+        // Scroll to make sure the input is visible
+        setTimeout(() => {
+          if (scrollViewRef.current) {
+            scrollViewRef.current.scrollTo({
+              y: pageY - 100, // Scroll to position the input in view with some margin
+              animated: true,
+            });
+          }
+        }, 100);
+      });
+    }
+
+    setShowCityDropdown(true);
+  };
+
+  const handleCityUnFocus = () => {
+    // Hide the dropdown and reset the scroll position
+    setShowCityDropdown(false);
+    if (scrollViewRef.current) {
+      scrollViewRef.current.scrollTo({
+        y: 0, // Reset to the top of the scroll view
+        animated: true,
+      });
+    }
+  };
+
+  const handleGroupCreation = async () => {
     const formattedIni = startDate?.toISOString().split("T")[0] ?? null;
     const formattedFi = endDate?.toISOString().split("T")[0] ?? null;
     if (formattedIni != null && formattedFi != null) {
-      const result = createGroup({
+      const data = await createGroup({
         name: name,
         description: description,
         data_ini: formattedIni,
         data_fi: formattedFi,
+        city: city || "Barcelona",
       });
 
-      if (result) {
+      if (data) {
+        console.log(data);
+        console.log(data.id);
+        updateCode(data.id);
         refi();
-        console.log("Creat amb id:", result);
         onCreated();
       }
     }
@@ -61,121 +149,238 @@ export default function CreateGroupModal({
       transparent
       onRequestClose={onClose}
     >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <View style={styles.headerContainer}>
-              <LinearGradient
-                colors={["#2196F3", "#0D47A1"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.headerGradient}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.keyboardAvoidingView}
+      >
+        <TouchableWithoutFeedback
+          onPress={() => {
+            Keyboard.dismiss();
+            setShowCityDropdown(false);
+          }}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <View style={styles.headerContainer}>
+                <LinearGradient
+                  colors={["#2196F3", "#0D47A1"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.headerGradient}
+                >
+                  <Text style={styles.headerTitle}>Crear nou grup</Text>
+                </LinearGradient>
+              </View>
+
+              <ScrollView
+                ref={scrollViewRef}
+                style={styles.scrollView}
+                contentContainerStyle={styles.scrollViewContent}
+                keyboardShouldPersistTaps="handled"
               >
-                <Text style={styles.headerTitle}>Crear nou grup</Text>
-              </LinearGradient>
-            </View>
-
-            <ScrollView
-              style={styles.scrollView}
-              contentContainerStyle={styles.scrollViewContent}
-            >
-              <View style={styles.inputContainer}>
-                <Feather
-                  name="users"
-                  size={20}
-                  color="#2196F3"
-                  style={styles.inputIcon}
-                />
-                <TextInput
-                  placeholder="Nom del grup"
-                  style={styles.input}
-                  value={name}
-                  onChangeText={setName}
-                  placeholderTextColor="#A0A0A0"
-                />
-              </View>
-
-              <View style={styles.inputContainer}>
-                <Feather
-                  name="file-text"
-                  size={20}
-                  color="#2196F3"
-                  style={styles.inputIcon}
-                />
-                <TextInput
-                  placeholder="Descripció"
-                  style={styles.input}
-                  value={description}
-                  onChangeText={setDescription}
-                  placeholderTextColor="#A0A0A0"
-                  multiline
-                />
-              </View>
-
-              <View style={styles.inputContainer}>
-                <Feather
-                  name="user-plus"
-                  size={20}
-                  color="#2196F3"
-                  style={styles.inputIcon}
-                />
-                <Text style={styles.inputLabel}>Número de persones</Text>
-                <TextInput
-                  style={styles.peopleInput}
-                  keyboardType="numeric"
-                  value={numPeople}
-                  onChangeText={(text) => {
-                    const numericValue = text.replace(/[^0-9]/g, "");
-                    setNumPeople(numericValue);
-                  }}
-                  placeholder="1"
-                  placeholderTextColor="#A0A0A0"
-                />
-              </View>
-
-              <View style={styles.dateSection}>
-                <View style={styles.dateSectionHeader}>
-                  <Feather name="calendar" size={20} color="#2196F3" />
-                  <Text style={styles.dateSectionTitle}>Dates del viatge</Text>
-                </View>
-
-                <View style={styles.datePickerContainer}>
-                  <DatePicker
-                    startDate={startDate}
-                    endDate={endDate}
-                    setStartDate={setStartDate}
-                    setEndDate={setEndDate}
+                <View style={styles.inputContainer}>
+                  <Feather
+                    name="users"
+                    size={20}
+                    color="#2196F3"
+                    style={styles.inputIcon}
+                  />
+                  <TextInput
+                    placeholder="Nom del grup"
+                    style={styles.input}
+                    value={name}
+                    onChangeText={setName}
+                    placeholderTextColor="#A0A0A0"
                   />
                 </View>
-              </View>
 
-              <View style={styles.buttonContainer}>
-                <TouchableOpacity onPress={onClose} style={styles.cancelButton}>
-                  <Text style={styles.cancelButtonText}>Cancel·lar</Text>
-                </TouchableOpacity>
+                <View style={styles.inputContainer}>
+                  <Feather
+                    name="file-text"
+                    size={20}
+                    color="#2196F3"
+                    style={styles.inputIcon}
+                  />
+                  <TextInput
+                    placeholder="Descripció"
+                    style={styles.input}
+                    value={description}
+                    onChangeText={setDescription}
+                    placeholderTextColor="#A0A0A0"
+                    multiline
+                  />
+                </View>
 
-                <TouchableOpacity onPress={handleGroupCreation}>
-                  <LinearGradient
-                    colors={["#2196F3", "#0D47A1"]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.createButton}
+                <View style={styles.inputContainer}>
+                  <Feather
+                    name="user-plus"
+                    size={20}
+                    color="#2196F3"
+                    style={styles.inputIcon}
+                  />
+                  <Text style={styles.inputLabel}>Número de persones</Text>
+                  <TextInput
+                    style={styles.peopleInput}
+                    keyboardType="numeric"
+                    value={numPeople}
+                    onChangeText={(text) => {
+                      const numericValue = text.replace(/[^0-9]/g, "");
+                      setNumPeople(numericValue);
+                    }}
+                    placeholder="1"
+                    placeholderTextColor="#A0A0A0"
+                  />
+                </View>
+
+                <View style={styles.dateSection}>
+                  <View style={styles.dateSectionHeader}>
+                    <Feather name="calendar" size={20} color="#2196F3" />
+                    <Text style={styles.dateSectionTitle}>
+                      Dates del viatge
+                    </Text>
+                  </View>
+
+                  <View style={styles.datePickerContainer}>
+                    <DatePicker
+                      startDate={startDate}
+                      endDate={endDate}
+                      setStartDate={setStartDate}
+                      setEndDate={setEndDate}
+                    />
+                  </View>
+                </View>
+
+                {/* City Autocomplete Section */}
+                <View style={styles.citySection}>
+                  <View style={styles.dateSectionHeader}>
+                    <Feather name="map-pin" size={20} color="#2196F3" />
+                    <Text style={styles.dateSectionTitle}>Destinació</Text>
+                  </View>
+
+                  <View style={styles.cityInputWrapper} ref={cityInputRef}>
+                    {/* Show dropdown above input if needed */}
+                    {showCityDropdown &&
+                      filteredCities.length > 0 &&
+                      dropdownPosition === "top" && (
+                        <View style={styles.dropdownListTop}>
+                          {filteredCities.map((item, index) => (
+                            <TouchableOpacity
+                              key={index}
+                              style={[
+                                styles.dropdownItem,
+                                index === filteredCities.length - 1 &&
+                                  styles.lastDropdownItem,
+                              ]}
+                              onPress={() => handleCitySelect(item)}
+                            >
+                              <Feather
+                                name="map-pin"
+                                size={16}
+                                color="#2196F3"
+                                style={styles.dropdownIcon}
+                              />
+                              <Text style={styles.dropdownText}>{item}</Text>
+                            </TouchableOpacity>
+                          ))}
+                        </View>
+                      )}
+
+                    <View style={styles.inputContainer}>
+                      <Feather
+                        name="map"
+                        size={20}
+                        color="#2196F3"
+                        style={styles.inputIcon}
+                      />
+                      <TextInput
+                        placeholder="Selecciona una ciutat"
+                        style={styles.input}
+                        value={city}
+                        onChangeText={handleCityChange}
+                        onFocus={handleCityFocus}
+                        onBlur={handleCityUnFocus}
+                        placeholderTextColor="#A0A0A0"
+                      />
+                      {city ? (
+                        <TouchableOpacity
+                          onPress={() => setCity("")}
+                          style={styles.clearButton}
+                        >
+                          <MaterialIcons
+                            name="clear"
+                            size={20}
+                            color="#A0A0A0"
+                          />
+                        </TouchableOpacity>
+                      ) : null}
+                    </View>
+
+                    {/* Show dropdown below input by default */}
+                    {showCityDropdown &&
+                      filteredCities.length > 0 &&
+                      dropdownPosition === "bottom" && (
+                        <View style={styles.dropdownListBottom}>
+                          {filteredCities.map((item, index) => (
+                            <TouchableOpacity
+                              key={index}
+                              style={[
+                                styles.dropdownItem,
+                                index === filteredCities.length - 1 &&
+                                  styles.lastDropdownItem,
+                              ]}
+                              onPress={() => handleCitySelect(item)}
+                            >
+                              <Feather
+                                name="map-pin"
+                                size={16}
+                                color="#2196F3"
+                                style={styles.dropdownIcon}
+                              />
+                              <Text style={styles.dropdownText}>{item}</Text>
+                            </TouchableOpacity>
+                          ))}
+                        </View>
+                      )}
+                  </View>
+                </View>
+
+                <View style={styles.buttonContainer}>
+                  <TouchableOpacity
+                    onPress={onClose}
+                    style={styles.cancelButton}
                   >
-                    <Text style={styles.createButtonText}>Crear</Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              </View>
+                    <Text style={styles.cancelButtonText}>Cancel·lar</Text>
+                  </TouchableOpacity>
 
-              {error && <Text style={styles.errorText}>{error}</Text>}
-            </ScrollView>
+                  <TouchableOpacity onPress={handleGroupCreation}>
+                    <LinearGradient
+                      colors={["#2196F3", "#0D47A1"]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={styles.createButton}
+                    >
+                      <Text style={styles.createButtonText}>Crear</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                </View>
+
+                {error && <Text style={styles.errorText}>{error}</Text>}
+
+                {/* Add extra space at the bottom for keyboard */}
+                <View style={styles.keyboardSpacer} />
+              </ScrollView>
+            </View>
           </View>
-        </View>
-      </TouchableWithoutFeedback>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
+  keyboardAvoidingView: {
+    flex: 1,
+  },
   modalContainer: {
     flex: 1,
     justifyContent: "center",
@@ -255,6 +460,10 @@ const styles = StyleSheet.create({
   dateSection: {
     marginBottom: 20,
   },
+  citySection: {
+    marginBottom: 20,
+    zIndex: 1000,
+  },
   dateSectionHeader: {
     flexDirection: "row",
     alignItems: "center",
@@ -269,6 +478,67 @@ const styles = StyleSheet.create({
   datePickerContainer: {
     width: "100%",
     paddingHorizontal: 4,
+  },
+  cityInputWrapper: {
+    position: "relative",
+    zIndex: 1000,
+  },
+  dropdownListBottom: {
+    position: "absolute",
+    top: "100%",
+    left: 0,
+    right: 0,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#EEEEEE",
+    borderRadius: 12,
+    marginTop: -8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+    maxHeight: 150,
+    zIndex: 1000,
+  },
+  dropdownListTop: {
+    position: "absolute",
+    bottom: "100%",
+    left: 0,
+    right: 0,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#EEEEEE",
+    borderRadius: 12,
+    marginBottom: -8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+    maxHeight: 150,
+    zIndex: 1000,
+  },
+  dropdownItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F5F5F5",
+  },
+  lastDropdownItem: {
+    borderBottomWidth: 0,
+  },
+  dropdownIcon: {
+    marginRight: 12,
+  },
+  dropdownText: {
+    fontSize: 16,
+    color: "#333333",
+  },
+  clearButton: {
+    padding: 4,
   },
   buttonContainer: {
     flexDirection: "row",
@@ -307,5 +577,8 @@ const styles = StyleSheet.create({
     color: "#FF3B30",
     marginTop: 12,
     textAlign: "center",
+  },
+  keyboardSpacer: {
+    height: 100, // Extra space at the bottom when keyboard is open
   },
 });

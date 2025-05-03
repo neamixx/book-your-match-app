@@ -1,22 +1,29 @@
-import React from 'react';
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { Link, Tabs } from 'expo-router';
-import { Pressable, View } from 'react-native';
+import React from "react";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { Link, Tabs } from "expo-router";
+import { Pressable, View } from "react-native";
 
-import Colors from '@/constants/Colors';
-import { useColorScheme } from '@/components/useColorScheme';
-import { useClientOnlyValue } from '@/components/useClientOnlyValue';
+import Colors from "@/constants/Colors";
+import { useColorScheme } from "@/components/useColorScheme";
+import { useClientOnlyValue } from "@/components/useClientOnlyValue";
 
 function TabBarIcon({
   name,
   color,
 }: {
-  name: React.ComponentProps<typeof Ionicons>['name'];
+  name: React.ComponentProps<typeof Ionicons>["name"];
   color: string;
 }) {
   return (
-    <View style={{ alignItems: 'center', justifyContent: 'center', paddingTop: 5 }}>
-      <Ionicons size={30} style={{ marginBottom: -3 }} name={name} color={color} />
+    <View
+      style={{ alignItems: "center", justifyContent: "center", paddingTop: 5 }}
+    >
+      <Ionicons
+        size={30}
+        style={{ marginBottom: -3 }}
+        name={name}
+        color={color}
+      />
     </View>
   );
 }
@@ -31,22 +38,22 @@ export default function TabLayout() {
           height: 70,
           borderTopLeftRadius: 20,
           borderTopRightRadius: 20,
-          backgroundColor: '#fff',
-          shadowColor: '#000',
+          backgroundColor: "#fff",
+          shadowColor: "#000",
           shadowOffset: { width: 0, height: -2 },
           shadowOpacity: 0.05,
           shadowRadius: 10,
           elevation: 10,
         },
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        tabBarInactiveTintColor: '#ccc',
+        tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
+        tabBarInactiveTintColor: "#ccc",
         headerShown: useClientOnlyValue(false, true),
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: '',
+          title: "",
           tabBarIcon: ({ color }) => <TabBarIcon name="person" color={color} />,
           headerRight: () => (
             <Link href="/modal" asChild>
@@ -55,7 +62,7 @@ export default function TabLayout() {
                   <Ionicons
                     name="information-circle"
                     size={24}
-                    color={Colors[colorScheme ?? 'light'].text}
+                    color={Colors[colorScheme ?? "light"].text}
                     style={{ opacity: pressed ? 0.5 : 1 }}
                   />
                 )}
@@ -67,14 +74,14 @@ export default function TabLayout() {
       <Tabs.Screen
         name="two"
         options={{
-          title: '',
+          title: "",
           tabBarIcon: ({ color }) => <TabBarIcon name="search" color={color} />,
         }}
       />
       <Tabs.Screen
         name="groups"
         options={{
-          title: '',
+          title: "",
           tabBarIcon: ({ color }) => <TabBarIcon name="people" color={color} />,
         }}
       />
