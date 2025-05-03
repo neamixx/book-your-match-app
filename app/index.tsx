@@ -6,7 +6,7 @@ const index = () => {
     const router = useRouter();
     useEffect(() => {
         setTimeout(() => {
-            router.replace("/(tabs)/two")
+            router.replace("/(auth)/login")
         },2000)
     }, [])
 
