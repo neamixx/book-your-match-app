@@ -72,7 +72,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="two"
+        name="swap"
         options={{
           title: "",
           tabBarIcon: ({ color }) => <TabBarIcon name="search" color={color} />,

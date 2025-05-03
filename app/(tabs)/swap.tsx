@@ -3,11 +3,8 @@ import React, { useState, useEffect, useRef } from "react";
 
 import { Text, View } from "@/components/Themed";
 import Card from "@/components/Card";
-import Constants from "expo-constants";
 
-export default function TabTwoScreen() {
-  const apiUrl = Constants.expoConfig?.extra?.API_URL;
-
+export default function Swap() {
   const [cards, setCards] = useState<
     { id: number; tittle: string; image: string }[]
   >([]);
@@ -16,7 +13,7 @@ export default function TabTwoScreen() {
 
   const requestNewCard = async () => {
     try {
-      const response = await fetch(`${apiUrl}/card`);
+      const response = await fetch("http://192.168.43.82:8000/card");
       const data = await response.json();
       return data;
     } catch {
@@ -65,6 +62,7 @@ export default function TabTwoScreen() {
       </Text>
       {cards.map((element, index) => (
         <Card
+          identifier={element.id}
           key={(countRef.current += 1)}
           tittle={element.tittle}
           img={element.image}
