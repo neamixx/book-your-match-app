@@ -8,7 +8,7 @@ import Card from '@/components/Card'
 export default function TabTwoScreen() {
   return (
     <View style={styles.container}>
-      <Card tittle={'Mohitos en la playa'} ></Card>
+      <Card></Card>
     </View>
   );
 }

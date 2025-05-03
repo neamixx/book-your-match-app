@@ -1,35 +1,64 @@
-import React from 'react';
-import { StyleSheet, Dimensions, Image , TouchableOpacity} from 'react-native';
+import React, {Ref, useState, useEffect, useCallback, useRef, forwardRef } from 'react';
+import { StyleSheet, Dimensions, Image , Text, View, TouchableOpacity} from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 
 import beach from '@/assets/images/playa.jpeg';
 
-import { Text, View } from './Themed';
 
 const { width } = Dimensions.get('window');
 const {  height } = Dimensions.get('window');
 
-const handleAccept = () => {
-    console.log('Accept!');
-};
+type card = {
+    tittle: string,
+    image: string,
+}
+export default function Card(){
+    const [card, setCard] = useState<card | null>(null);
+    const [loading, setLoading] = useState(true);
 
-export default function Card({ tittle }: { tittle: string }) {
+    const request_new_card = async () => {
+        console.log("hola")
+        try {
+            setLoading(true)
+            const response = await fetch('http://192.168.43.82:8000/card');
+            const data = await response.json();
+            console.log(data)
+            console.log(`http://192.168.43.82:8000/${card?.image}`)
+
+            setCard(data);
+            setLoading(false);
+        } catch {
+        console.log("bug")
+            return 'error'
+        }
+    };
+
+    const handle_accept = async () => {
+        request_new_card()
+    }
+
+    const handle_reject = async () => {
+        request_new_card()
+    }
+
+    useEffect(() => {
+        request_new_card(); // Call the handleAccept function when the component mounts
+      }, []);
+    
   return (
     <View>
       <View style={styles.container}>
-    
-        <Image style={styles.image} source={beach}/>
+            {loading ? <Text>"Loading"</Text>
+            : <Image style={styles.image} source={{uri: `http://192.168.43.82:8000${card?.image}`}} />
+        }
+        
         <View style={{backgroundColor:"transparent", display:"flex", flexDirection:"column", columnGap: 50, marginTop: 50}}>
-        <Text
-          style={styles.getStartedText}
-          lightColor="rgba(0,0,0,0.8)"
-          darkColor="rgba(255,255,255,0.8)">
-          {tittle}
+        <Text>
+            {loading ? "loading" : card?.tittle}
         </Text>
             <View style={{backgroundColor:"transparent", display:"flex", flexDirection:"row", columnGap: 50, marginTop: 50}}>
-                <Button col={"#ee2222"} icon={"close"}></Button>
-                <Button col={"#22ee22"} icon={"heart"}></Button>
-
+                <Button col={"#ee2222"} icon={"close"} onPress={handle_accept}></Button>
+                <Button col={"#22ee22"} icon={"heart"} onPress={handle_reject}></Button>
             </View>
         </View>
       </View>
@@ -37,23 +66,17 @@ export default function Card({ tittle }: { tittle: string }) {
   );
 }
 
-function Button(props: {col: string, icon: React.ComponentProps<typeof FontAwesome>['name'];}){
-    return(
-        <TouchableOpacity style={{
-            
-            backgroundColor: props.col,
-            margin: "auto",
-            justifyContent: 'center', // center vertically
-            alignItems: 'center',
-            width:60,
-            height:60,
-            borderRadius: 100,
-        }} onPress={handleAccept}>
-            <FontAwesome size={30} style={{ color:'#fefefe', padding: 10}} name={props.icon}/>
+const Button = ({ col, icon, onPress }: { col: string, icon: React.ComponentProps<typeof FontAwesome>['name'], onPress: () => void }) => {
+    return (
+        <TouchableOpacity
+            style={[styles.button, { backgroundColor: col }]}
+            onPress={onPress} // Use onPress to trigger the function
+        >
+            <FontAwesome size={30} style={styles.icon} name={icon} />
         </TouchableOpacity>
-      
-    )
-}
+    );
+};
+  
 const styles = StyleSheet.create({
   container: {
     backgroundColor:'#333333',
@@ -64,29 +87,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 50,
     paddingTop: 15,
     paddingBottom: 45,
-  },
-  homeScreenFilename: {
-    marginVertical: 7,
-  },
-  codeHighlightContainer: {
-    borderRadius: 3,
-    paddingHorizontal: 4,
-  },
-  getStartedText: {
-    fontSize: 17,
-    lineHeight: 24,
-    textAlign: 'center',
-  },
-  helpContainer: {
-    marginTop: 15,
-    marginHorizontal: 20,
-    alignItems: 'center',
-  },
-  helpLink: {
-    paddingVertical: 15,
-  },
-  helpLinkText: {
-    textAlign: 'center',
   },
   image: {
     width: '90%',
@@ -99,4 +99,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     borderRadius: 100,
   },
+  icon:{
+
+  }
 });
