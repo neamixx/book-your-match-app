@@ -1,49 +1,44 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React from "react";
+import { View, Text, StyleSheet } from "react-native";
 
 type CardGroupProps = {
   id: number;
-  nombre: string;
-  descripcion: string;
+  name: string;
+  description: string;
 };
 
-const CardGroup: React.FC<CardGroupProps> = ({ id, nombre, descripcion }) => {
+export default function CardGroup({ id, name, description }: CardGroupProps) {
   return (
     <View style={styles.card}>
-      <Text style={styles.title}>{nombre}</Text>
-      <Text style={styles.id}>ID: {id}</Text>
-      <Text style={styles.description}>{descripcion}</Text>
+      <Text style={styles.title}>{name}</Text>
+      <Text style={styles.description}>{description}</Text>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#fff',
-    padding: 16,
-    marginVertical: 8,
-    marginHorizontal: 16,
+    backgroundColor: "#ffffff",
     borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
+    padding: 16,
+    marginHorizontal: 16,
+    marginVertical: 8,
+    borderWidth: 0,
+    borderColor: "#EEEEEE",
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 8,
     elevation: 3,
   },
   title: {
     fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  id: {
-    fontSize: 14,
-    color: '#555',
+    fontWeight: "bold",
+    color: "#333333",
     marginBottom: 8,
   },
   description: {
-    fontSize: 16,
-    color: '#333',
+    fontSize: 14,
+    color: "#666666",
   },
 });
-
-export default CardGroup;

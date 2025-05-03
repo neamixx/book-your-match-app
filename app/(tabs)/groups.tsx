@@ -1,36 +1,32 @@
-import React, { useEffect, useState } from 'react';
-import { View, ScrollView, ActivityIndicator, StyleSheet, Text } from 'react-native';
-import CardGroup from '@/components/GroupCard'; 
-
-type Group = {
-  id: number;
-  nombre: string;
-  descripcion: string;
-};
+import React, { useState } from "react";
+import {
+  View,
+  ScrollView,
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+  TextInput,
+  Button,
+  TouchableOpacity,
+} from "react-native";
+import CardGroup from "@/components/GroupCard";
+import { useGroups } from "@/hooks/useGroups";
 
 const GroupsScreen: React.FC = () => {
-  const [groups, setGroups] = useState<Group[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const { groups, loading, error, refetch } = useGroups();
+  const [joinCode, setJoinCode] = useState<string>("");
 
-  useEffect(() => {
-    const fetchGroups = async () => {
-      try {
-        const response = await fetch('https://0.0.0.0:8000/');
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data: Group[] = await response.json();
-        setGroups(data);
-      } catch (err) {
-        setError('Error al cargar los grupos');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const handleJoinGroup = () => {
+    if (joinCode.length !== 6) {
+      alert("El codi ha de tenir 6 dígits");
+      return;
+    }
+    alert(`Intentant unir-te amb el codi: ${joinCode}`);
+  };
 
-    fetchGroups();
-  }, []);
+  const handleCreateGroup = () => {
+    alert("Crear un nou grup");
+  };
 
   if (loading) {
     return (
@@ -40,37 +36,95 @@ const GroupsScreen: React.FC = () => {
     );
   }
 
-  if (error) {
-    return (
-      <View style={styles.center}>
-        <Text style={styles.errorText}>{error}</Text>
-      </View>
-    );
-  }
-
   return (
-    <ScrollView>
-      {groups.map((group) => (
-        <CardGroup
-          key={group.id}
-          id={group.id}
-          nombre={group.nombre}
-          descripcion={group.descripcion}
-        />
-      ))}
-    </ScrollView>
+    <View style={{ flex: 1, backgroundColor: "#ffffff" }}>
+      {groups.length > 0 ? (
+        <>
+          <ScrollView style={{ flex: 1 }}>
+            {groups.map((group) => (
+              <CardGroup
+                key={group.id}
+                id={group.id}
+                name={group.name}
+                description={group.description}
+              />
+            ))}
+          </ScrollView>
+          <TouchableOpacity style={styles.fab} onPress={handleCreateGroup}>
+            <Text style={styles.fabText}>+</Text>
+          </TouchableOpacity>
+        </>
+      ) : (
+        <View style={styles.center}>
+          <Text style={styles.emptyText}>
+            Encara no estàs a cap grup. Crea'n un o uneix-te amb un codi!
+          </Text>
+          <Button title="Crear grup" onPress={handleCreateGroup} />
+          <TextInput
+            style={styles.input}
+            placeholder="Introdueix un codi (6 dígits)"
+            keyboardType="numeric"
+            maxLength={6}
+            value={joinCode}
+            onChangeText={setJoinCode}
+          />
+          <Button title="Unir-se al grup" onPress={handleJoinGroup} />
+          {error && <Text style={{ color: "red" }}>{error}</Text>}
+          <Button title="Torna a carregar" onPress={refetch} />
+        </View>
+      )}
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   center: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+    backgroundColor: "#ffffff",
   },
-  errorText: {
-    color: 'red',
+  emptyText: {
+    fontSize: 18,
+    color: "#666666",
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  input: {
+    backgroundColor: "#F5F5F5",
+    borderWidth: 1,
+    borderColor: "#EEEEEE",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    width: 220,
     fontSize: 16,
+    color: "#333333",
+    textAlign: "center",
+    marginBottom: 12,
+  },
+  fab: {
+    position: "absolute",
+    right: 20,
+    bottom: 20,
+    backgroundColor: "#CCCCCC",
+
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#2196F3",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  fabText: {
+    color: "#ffffff",
+    fontSize: 30,
+    fontWeight: "bold",
   },
 });
 

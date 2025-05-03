@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { useState } from "react"
+import { useState } from "react";
 import {
   View,
   Text,
@@ -14,26 +14,28 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   ScrollView,
-} from "react-native"
-import { useRouter } from "expo-router"
-import { LinearGradient } from "expo-linear-gradient"
-import { Feather } from "@expo/vector-icons"
+} from "react-native";
+import { useRouter } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
+import { Feather } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const LoginScreen = () => {
-  const router = useRouter()
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async () => {
-    
+    router.push("/(tabs)");
+
     if (!email || !password) {
-      Alert.alert("Error", "Please fill in all fields.")
-      return
+      Alert.alert("Error", "Please fill in all fields.");
+      return;
     }
 
     try {
-      const response = await fetch("http://192.168.43.192:8000/users/login", {
+      const response = await fetch("http://10.195.30.219:8000/users/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -42,21 +44,23 @@ const LoginScreen = () => {
           email,
           password,
         }),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (response.ok) {
-        Alert.alert("Success", "Login successful!")
-        router.push("/(tabs)")
+        Alert.alert("Success", "Login successful!");
+        await AsyncStorage.setItem("userEmail", email);
+
+        router.push("/(tabs)");
       } else {
-        Alert.alert("Login Failed", data.detail || "Invalid credentials.")
+        Alert.alert("Login Failed", data.detail || "Invalid credentials.");
       }
     } catch (error) {
-      console.error("Login error:", error)
-      Alert.alert("Error", "Something went wrong. Please try again later.")
+      console.error("Login error:", error);
+      Alert.alert("Error", "Something went wrong. Please try again later.");
     }
-  }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -80,7 +84,12 @@ const LoginScreen = () => {
 
           <View style={styles.formContainer}>
             <View style={styles.inputContainer}>
-              <Feather name="mail" size={20} color="#2196F3" style={styles.inputIcon} />
+              <Feather
+                name="mail"
+                size={20}
+                color="#2196F3"
+                style={styles.inputIcon}
+              />
               <TextInput
                 style={styles.input}
                 placeholder="Email Address"
@@ -93,7 +102,12 @@ const LoginScreen = () => {
             </View>
 
             <View style={styles.inputContainer}>
-              <Feather name="lock" size={20} color="#2196F3" style={styles.inputIcon} />
+              <Feather
+                name="lock"
+                size={20}
+                color="#2196F3"
+                style={styles.inputIcon}
+              />
               <TextInput
                 style={styles.input}
                 placeholder="Password"
@@ -103,8 +117,15 @@ const LoginScreen = () => {
                 autoCapitalize="none"
                 placeholderTextColor="#A0A0A0"
               />
-              <TouchableOpacity style={styles.eyeIcon} onPress={() => setShowPassword(!showPassword)}>
-                <Feather name={showPassword ? "eye" : "eye-off"} size={20} color="#A0A0A0" />
+              <TouchableOpacity
+                style={styles.eyeIcon}
+                onPress={() => setShowPassword(!showPassword)}
+              >
+                <Feather
+                  name={showPassword ? "eye" : "eye-off"}
+                  size={20}
+                  color="#A0A0A0"
+                />
               </TouchableOpacity>
             </View>
 
@@ -130,13 +151,19 @@ const LoginScreen = () => {
             </View>
 
             <View style={styles.socialButtons}>
-              <TouchableOpacity style={[styles.socialButton, styles.googleButton]}>
+              <TouchableOpacity
+                style={[styles.socialButton, styles.googleButton]}
+              >
                 <Text style={styles.socialButtonText}>G</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.socialButton, styles.facebookButton]}>
+              <TouchableOpacity
+                style={[styles.socialButton, styles.facebookButton]}
+              >
                 <Text style={styles.socialButtonText}>f</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.socialButton, styles.appleButton]}>
+              <TouchableOpacity
+                style={[styles.socialButton, styles.appleButton]}
+              >
                 <Text style={styles.socialButtonText}>a</Text>
               </TouchableOpacity>
             </View>
@@ -151,8 +178,8 @@ const LoginScreen = () => {
         </View>
       </TouchableWithoutFeedback>
     </SafeAreaView>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   safeArea: {
@@ -310,6 +337,6 @@ const styles = StyleSheet.create({
     color: "#2196F3",
     fontWeight: "bold",
   },
-})
+});
 
-export default LoginScreen
+export default LoginScreen;
