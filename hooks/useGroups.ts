@@ -16,6 +16,7 @@ export function useGroups() {
   const [error, setError] = useState<string | null>(null);
 
   const fetchGroups = async () => {
+    console.log("fent refetching");
     const email = await AsyncStorage.getItem("userEmail");
     if (!email) return;
 
