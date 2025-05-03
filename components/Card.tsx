@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Animated, PanResponder, GestureResponderEvent, PanResponderGestureState } from 'react-native';
+import { Animated, PanResponder, Easing, GestureResponderEvent, PanResponderGestureState, ViewStyle, StyleProp } from 'react-native';
 import {
   StyleSheet,
   Dimensions,
@@ -18,13 +18,10 @@ type CardData = {
   image: string;
 };
 
-export default function Card() {
+const Card = ({ tittle, img, offset, onExit}: { tittle: String, img: String, offset: number, onExit: () => void;}) => {
   const [card, setCard] = useState<CardData | null>(null);
-  const [loading, setLoading] = useState(true);
-
-
-
   const position = useRef(new Animated.ValueXY()).current;
+
   const rotate = position.x.interpolate({
         inputRange: [-200, 0, 200],
         outputRange: ['-15deg', '0deg', '15deg'],
@@ -33,142 +30,141 @@ export default function Card() {
 
     const colorAccept = position.x.interpolate({
         inputRange: [0, 120],
-        outputRange: ['rgb(78, 78, 78)', 'rgb(0, 255, 0)'],
+        outputRange: ['rgb(78, 78, 78)', 'rgb(36, 214, 36)'],
         extrapolate: 'clamp',
     });
 
     const colorReject = position.x.interpolate({
         inputRange: [-120, 0],
-        outputRange: ['rgb(226, 8, 8)', 'rgb(78, 78, 78)'],
+        outputRange: ['rgb(219, 39, 39)', 'rgb(78, 78, 78)'],
         extrapolate: 'clamp',
     });
 
     const panResponder = useRef(
-    PanResponder.create({
+      PanResponder.create({
         onMoveShouldSetPanResponder: () => true,
-
+    
         onPanResponderGrant: () => {
-        position.setOffset({
-            x: position.x._value,
-            y: position.y._value
-        });
-        position.setValue({ x: 0, y: 0 });
+          position.extractOffset();
         },
+    
         onPanResponderMove: Animated.event(
-        [null, { dx: position.x, dy: position.y }],
-        { useNativeDriver: false, }
+          [null, { dx: position.x, dy: position.y }],
+          { useNativeDriver: false } 
         ),
-        onPanResponderRelease: (e: GestureResponderEvent, gesture: PanResponderGestureState) => {
-        console.log('Released', gesture.dx, gesture.dy);
-        console.log("hola")
-          if (gesture.dx > 120){
-            handleAccept()
+    
+        onPanResponderRelease: (e, gesture) => {
+          position.stopAnimation()
+          if (gesture.dx > 120) {
+            Animated.timing(position, {
+              toValue: { x: 500, y: 0 },
+              duration: 800, // Duration of the animation
+              easing: Easing.bezier(0.25, 0.8, 0.25, 1), // Custom Bezier curve easing
+              useNativeDriver: false,
+            }).start();
+            handleAccept();
           } else if (gesture.dx < -120) {
-            handleReject()
-          }
-        // Optional: reset or swipe logic
-        Animated.spring(position, {
+            
+            Animated.timing(position, {
+              toValue: { x: -500, y: 0 },
+              duration: 800, // Duration of the animation
+              easing: Easing.bezier(0.25, 0.8, 0.25, 1), // Custom Bezier curve easing
+              useNativeDriver: false,
+            }).start();
+            handleReject();
+          } else {
+
+          Animated.spring(position, {
             toValue: { x: 0, y: 0 },
-            useNativeDriver: false,
-        }).start();
-        },
-    })
+            useNativeDriver: false
+          }).start();
+        }
+        
+        }
+      })
     ).current;
 
-  const requestNewCard = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch('http://192.168.43.82:8000/card');
-      const data = await response.json();
-      setCard(data);
-    } catch {
-      console.log('Failed to fetch card');
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const handleAccept = () => requestNewCard();
-  const handleReject = () => requestNewCard();
 
-  useEffect(() => {
-    requestNewCard();
-  }, []);
+  const handleAccept = () => {
+    onExit();
+  }
+  const handleReject = () => {
+    onExit();
+  }
+
+  const handleDelete = () => {
+    console.log("freeze")
+  }
+
+
 
   return (
         <Animated.View
         {...panResponder.panHandlers}
         style={[
             {
+            position:'absolute',
             transform: [
                 { translateX: position.x },
-                { translateY: position.y },
+                { translateY: Animated.add(position.y, offset)},
                 { rotate: rotate }
             ]
             }
         ]}
         >
+          <View style={styles.outerContainer}>
+
+          
       <View style={styles.card}>
-        {loading ? (
-          <Text style={styles.loadingText}>Loading...</Text>
-        ) : (
           <Image
             style={styles.image}
-            source={{ uri: `http://192.168.43.82:8000${card?.image}` }}
+            source={{ uri: `http://192.168.43.82:8000${img}` }}
           />
-        )}
 
-        <Text style={styles.title}>{loading ? 'Loading...' : card?.tittle}</Text>
+        <Text style={styles.title}> {tittle}</Text>
 
         <View style={styles.buttonRow}>
-          <CardButton col={colorReject} icon="close" onPress={handleReject} />
-          <CardButton col={colorAccept} icon="heart" onPress={handleAccept} />
+          <CardButton col={colorReject} icon="close" />
+          <CardButton col={colorAccept} icon="heart" />
         </View>
+      </View>
       </View>
     </Animated.View>
   );
 }
 
-const CardButton = ({
-  col,
-  icon,
-  onPress,
-}: {
-  col: string;
+type CardButtonProps = {
+  col: string | Animated.AnimatedInterpolation<string>;
   icon: React.ComponentProps<typeof FontAwesome>['name'];
-  onPress: () => void;
-}) => (
-  <TouchableOpacity
-    style={[styles.button, { backgroundColor: col }]}
-    onPress={onPress}
-  >
-    <FontAwesome size={24} color="#fff" name={icon} />
-  </TouchableOpacity>
-);
+};
 
+const CardButton: React.FC<CardButtonProps> = ({ col, icon }) => (
+  <Animated.View style={[styles.button, { backgroundColor: col }]}>
+    <FontAwesome size={24} color="#fff" name={icon} />
+  </Animated.View>
+);
 const styles = StyleSheet.create({
     outerContainer: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingTop: 30,
+      shadowColor: '#000',
+      shadowOpacity: 0.1,
+      shadowOffset: { width: 0, height: 4 },
+      shadowRadius: 8,
     },
+
     card: {
       backgroundColor: '#ffffff', // Make the card white
       width: width * 0.9,
       borderRadius: 16,
       alignItems: 'center',
-      padding: 20,
-      shadowColor: '#000',
-      shadowOpacity: 0.1,
-      shadowOffset: { width: 0, height: 4 },
-      shadowRadius: 8,
+      paddingLeft: 0,
+      paddingRight: 0,
       elevation: 3,
+      overflow:"hidden",      
     },
     image: {
       width: '100%',
       height: height * 0.3,
-      borderRadius: 12,
       marginBottom: 20,
     },
     title: {
@@ -185,16 +181,19 @@ const styles = StyleSheet.create({
     },
     buttonRow: {
       flexDirection: 'row',
-      justifyContent: 'space-around',
-      width: '60%',
+      justifyContent: 'center',
+      width: '100%',
       marginTop: 10,
     },
     button: {
-      width: 60,
+      width: "50%",
       height: 60,
-      borderRadius: 30,
+      margin: "auto",
       justifyContent: 'center',
       alignItems: 'center',
     },
   });
   
+
+
+export default Card;
