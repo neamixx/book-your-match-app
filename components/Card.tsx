@@ -1,106 +1,185 @@
-import React, {Ref, useState, useEffect, useCallback, useRef, forwardRef } from 'react';
-import { StyleSheet, Dimensions, Image , Text, View, TouchableOpacity} from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { Animated, PanResponder, GestureResponderEvent, PanResponderGestureState } from 'react-native';
+import {
+  StyleSheet,
+  Dimensions,
+  Image,
+  Text,
+  View,
+  TouchableOpacity,
+} from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 
-import beach from '@/assets/images/playa.jpeg';
+const { width, height } = Dimensions.get('window');
 
+type CardData = {
+  id: Number;
+  tittle: string;
+  image: string;
+};
 
-const { width } = Dimensions.get('window');
-const {  height } = Dimensions.get('window');
+export default function Card() {
+  const [card, setCard] = useState<CardData | null>(null);
+  const [loading, setLoading] = useState(true);
 
-type card = {
-    id: Number,
-    tittle: string,
-    image: string,
-}
-export default function Card(){
-    const [card, setCard] = useState<card | null>(null);
-    const [loading, setLoading] = useState(true);
+  const position = useRef(new Animated.ValueXY()).current;
+  const rotate = position.x.interpolate({
+        inputRange: [-200, 0, 200],
+        outputRange: ['-15deg', '0deg', '15deg'],
+        extrapolate: 'clamp',
+    });
+    const panResponder = useRef(
+    PanResponder.create({
+        onMoveShouldSetPanResponder: () => true,
 
-    const request_new_card = async () => {
-        console.log("hola")
-        try {
-            setLoading(true)
-            const response = await fetch('http://192.168.43.82:8000/card');
-            const data = await response.json();
-            console.log(data)
-            console.log(`http://192.168.43.82:8000/${card?.image}`)
-
-            setCard(data);
-            setLoading(false);
-        } catch {
-        console.log("bug")
-            return 'error'
+        onPanResponderGrant: () => {
+        position.setOffset({
+            x: position.x._value,
+            y: position.y._value
+        });
+        position.setValue({ x: 0, y: 0 });
+        },
+        onPanResponderMove: Animated.event(
+        [null, { dx: position.x, dy: position.y }],
+        { 
+            useNativeDriver: false,
+            listener(event) {
+                console.log("hola")
+            },
         }
-    };
+        ),
+        onPanResponderRelease: (e: GestureResponderEvent, gesture: PanResponderGestureState) => {
+        console.log('Released', gesture.dx, gesture.dy);
 
-    const handle_accept = async () => {
-        request_new_card()
+        // Optional: reset or swipe logic
+        Animated.spring(position, {
+            toValue: { x: 0, y: 0 },
+            useNativeDriver: false,
+        }).start();
+        },
+    })
+    ).current;
+
+  const requestNewCard = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('http://192.168.43.82:8000/card');
+      const data = await response.json();
+      setCard(data);
+    } catch {
+      console.log('Failed to fetch card');
+    } finally {
+      setLoading(false);
     }
+  };
 
-    const handle_reject = async () => {
-        request_new_card()
-    }
+  const handleAccept = () => requestNewCard();
+  const handleReject = () => requestNewCard();
 
-    useEffect(() => {
-        request_new_card(); // Call the handleAccept function when the component mounts
-      }, []);
-    
+  useEffect(() => {
+    requestNewCard();
+  }, []);
+
   return (
-    <View>
-      <View style={styles.container}>
-            {loading ? <Text>"Loading"</Text>
-            : <Image style={styles.image} source={{uri: `http://192.168.43.82:8000${card?.image}`}} />
-        }
-        
-        <View style={{backgroundColor:"transparent", display:"flex", flexDirection:"column", columnGap: 50, marginTop: 50}}>
-        <Text>
-            {loading ? "loading" : card?.tittle}
-        </Text>
-            <View style={{backgroundColor:"transparent", display:"flex", flexDirection:"row", columnGap: 50, marginTop: 50}}>
-                <Button col={"#ee2222"} icon={"close"} onPress={handle_accept}></Button>
-                <Button col={"#22ee22"} icon={"heart"} onPress={handle_reject}></Button>
-            </View>
+        <Animated.View
+        {...panResponder.panHandlers}
+        style={[
+            {
+            transform: [
+                { translateX: position.x },
+                { translateY: position.y },
+                { rotate: rotate }
+            ]
+            }
+        ]}
+        >
+      <View style={styles.card}>
+        {loading ? (
+          <Text style={styles.loadingText}>Loading...</Text>
+        ) : (
+          <Image
+            style={styles.image}
+            source={{ uri: `http://192.168.43.82:8000${card?.image}` }}
+          />
+        )}
+
+        <Text style={styles.title}>{loading ? 'Loading...' : card?.tittle}</Text>
+
+        <View style={styles.buttonRow}>
+          <CardButton col="#ee2222" icon="close" onPress={handleReject} />
+          <CardButton col="#22ee22" icon="heart" onPress={handleAccept} />
         </View>
       </View>
-    </View>
+    </Animated.View>
   );
 }
 
-const Button = ({ col, icon, onPress }: { col: string, icon: React.ComponentProps<typeof FontAwesome>['name'], onPress: () => void }) => {
-    return (
-        <TouchableOpacity
-            style={[styles.button, { backgroundColor: col }]}
-            onPress={onPress} // Use onPress to trigger the function
-        >
-            <FontAwesome size={30} style={styles.icon} name={icon} />
-        </TouchableOpacity>
-    );
-};
-  
+const CardButton = ({
+  col,
+  icon,
+  onPress,
+}: {
+  col: string;
+  icon: React.ComponentProps<typeof FontAwesome>['name'];
+  onPress: () => void;
+}) => (
+  <TouchableOpacity
+    style={[styles.button, { backgroundColor: col }]}
+    onPress={onPress}
+  >
+    <FontAwesome size={24} color="#fff" name={icon} />
+  </TouchableOpacity>
+);
+
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor:'#333333',
-    width: width * 0.85,
-
-    alignItems: 'center',
-    borderRadius: 10,
-    marginHorizontal: 50,
-    paddingTop: 15,
-    paddingBottom: 45,
-  },
-  image: {
-    width: '90%',
-    height: height*0.30,
-    borderRadius: 8,
-  },
-  button: {
-    backgroundColor: '#22DD22',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 100,
-  },
-  icon:{
-
-  }
-});
+    outerContainer: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingTop: 30,
+    },
+    card: {
+      backgroundColor: '#ffffff', // Make the card white
+      width: width * 0.9,
+      borderRadius: 16,
+      alignItems: 'center',
+      padding: 20,
+      shadowColor: '#000',
+      shadowOpacity: 0.1,
+      shadowOffset: { width: 0, height: 4 },
+      shadowRadius: 8,
+      elevation: 3,
+    },
+    image: {
+      width: '100%',
+      height: height * 0.3,
+      borderRadius: 12,
+      marginBottom: 20,
+    },
+    title: {
+      color: '#222', // Dark text for white card
+      fontSize: 22,
+      fontWeight: '600',
+      marginBottom: 30,
+      textAlign: 'center',
+    },
+    loadingText: {
+      color: '#888',
+      fontSize: 18,
+      marginVertical: 40,
+    },
+    buttonRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+      width: '60%',
+      marginTop: 10,
+    },
+    button: {
+      width: 60,
+      height: 60,
+      borderRadius: 30,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+  });
+  
