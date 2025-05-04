@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 
 import { Text, View } from "@/components/Themed";
 import Card from "@/components/Card";
+import Constants from "expo-constants";
 
 export default function Swap() {
   const [cards, setCards] = useState<
@@ -10,10 +11,10 @@ export default function Swap() {
   >([]);
 
   const countRef = useRef(0);
-
+  const apiUrl = Constants.expoConfig?.extra?.API_URL;
   const requestNewCard = async () => {
     try {
-      const response = await fetch("http://192.168.43.82:8000/card");
+      const response = await fetch(`${apiUrl}/card`);
       const data = await response.json();
       return data;
     } catch {

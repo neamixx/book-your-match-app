@@ -17,6 +17,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Feather, MaterialIcons } from "@expo/vector-icons";
 import DatePicker from "./DatePicker";
 import { useGroupCreation } from "@/hooks/useGroupCreation";
+import { useCities } from "@/hooks/useCities";
 
 type CreateGroupModalProps = {
   visible: boolean;
@@ -38,11 +39,11 @@ export default function CreateGroupModal({
 }: CreateGroupModalProps) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [numPeople, setNumPeople] = useState("1");
+  const [numPeople, setNumPeople] = useState(null);
   const { createGroup, loading, error } = useGroupCreation();
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
-
+  const { cities } = useCities();
   // City autocomplete state
   const [city, setCity] = useState("");
   const [filteredCities, setFilteredCities] = useState<string[]>([]);
@@ -55,15 +56,17 @@ export default function CreateGroupModal({
 
   // Filter cities based on input
   useEffect(() => {
+    if (!cities?.length) return;
+
     if (city) {
-      const filtered = CITIES.filter((item) =>
+      const filtered = cities.filter((item) =>
         item.toLowerCase().includes(city.toLowerCase())
       );
       setFilteredCities(filtered);
     } else {
       setFilteredCities([]);
     }
-  }, [city]);
+  }, [city, cities]);
 
   // Handle city input change
   const handleCityChange = (text: string) => {

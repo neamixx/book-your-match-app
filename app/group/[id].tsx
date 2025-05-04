@@ -62,7 +62,7 @@ const GroupScreen: React.FC = () => {
 
           <TouchableOpacity
             onPress={() => {
-              router.push("/(tabs)/two");
+              router.push("/(tabs)/swap");
             }}
           >
             <LinearGradient

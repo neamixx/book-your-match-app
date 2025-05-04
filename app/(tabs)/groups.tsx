@@ -16,8 +16,16 @@ import { useJoiningGroup } from "@/hooks/useJoiningGroup";
 import InvitationModal from "@/components/InivationModal";
 import { router } from "expo-router";
 import CreateJoinModal from "@/components/CreateJoinGroup";
+import { useCities } from "@/hooks/useCities";
+import { useRef } from "react";
+import { Feather, MaterialIcons } from "@expo/vector-icons";
 
 const GroupsScreen: React.FC = () => {
+  const { cities } = useCities();
+  const [city, setCity] = useState("");
+  const [filteredCities, setFilteredCities] = useState<string[]>([]);
+  const [showCityDropdown, setShowCityDropdown] = useState(false);
+  const cityInputRef = useRef<View>(null);
   const { groups, loading, error, refetch } = useGroups();
   const { joinGroup } = useJoiningGroup();
   const [joinCode, setJoinCode] = useState<string>("");
@@ -25,6 +33,42 @@ const GroupsScreen: React.FC = () => {
   const [invitationModalVisible, setInvitationModalVisible] = useState(false);
   const [shareCode, setShareCode] = useState(0);
   const [createJoinVisibility, setCreateJoinVisibility] = useState(false);
+
+  const [selectedCity, setSelectedCity] = useState("");
+  const handleCityChange = (text: string) => {
+    setCity(text);
+    if (text.length > 0) {
+      const filtered = cities.filter((item) =>
+        item.toLowerCase().includes(text.toLowerCase())
+      );
+      setFilteredCities(filtered);
+      setShowCityDropdown(true);
+    } else {
+      setFilteredCities([]);
+      setShowCityDropdown(false);
+    }
+  };
+
+  const handleCitySelect = (selectedCity: string) => {
+    setCity(selectedCity);
+    setShowCityDropdown(false);
+  };
+
+  const handleCityFocus = () => {
+    if (city.length > 0) {
+      setShowCityDropdown(true);
+    }
+  };
+
+  const handleCityUnFocus = () => {
+    setShowCityDropdown(false);
+  };
+
+  const handleCitySelected = (city: string) => {
+    setSelectedCity(city);
+    console.log(`Selected city: ${city}`);
+  };
+
   const handleClosingModal = async () => {
     console.log("xd");
     setModalVisible(false);
@@ -33,12 +77,15 @@ const GroupsScreen: React.FC = () => {
   };
 
   const handleJoinExistingGroup = async () => {
-    const success = await joinGroup(parseInt(joinCode, 10));
+    if (joinCode !== null && joinCode !== "" && city !== null && city !== "") {
+      const success = await joinGroup(parseInt(joinCode, 10), city);
 
-    if (success) {
-      alert("T'has unit al grup!");
-      refetch(); // 👈 Tornar a carregar els grups perquè surtin
-      setJoinCode(""); // opcional, netejar el camp
+      if (success) {
+        refetch(); // 👈 Tornar a carregar els grups perquè surtin
+        setJoinCode(""); // opcional, netejar el camp
+      }
+    } else {
+      alert("Please fill in all fields.");
     }
   };
 
@@ -69,10 +116,16 @@ const GroupsScreen: React.FC = () => {
         refi={refetch}
         onClose={() => setModalVisible(false)}
       />
+
       <CreateJoinModal
         visible={createJoinVisibility}
-        onClose={() => setCreateJoinVisibility(false)}
+        onClose={() => {
+          refetch();
+          setCreateJoinVisibility(false);
+        }}
         onCreatePressed={() => {
+          console.log("hola");
+          refetch();
           setCreateJoinVisibility(false);
           setModalVisible(true);
         }}
@@ -141,6 +194,48 @@ const GroupsScreen: React.FC = () => {
             onChangeText={setJoinCode}
           />
 
+          {/* Destination section - now centered */}
+          <View style={styles.destinationContainer}>
+            <View style={styles.labelContainer}></View>
+
+            <View style={styles.cityInputContainer} ref={cityInputRef}>
+              <Feather
+                name="map"
+                size={20}
+                color="#2196F3"
+                style={styles.inputIcon}
+              />
+              <TextInput
+                placeholder="Enter departure city"
+                style={styles.cityInput}
+                value={city}
+                onChangeText={handleCityChange}
+                onFocus={handleCityFocus}
+                onBlur={handleCityUnFocus}
+                placeholderTextColor="#A0A0A0"
+              />
+            </View>
+
+            {showCityDropdown && filteredCities.length > 0 && (
+              <View style={styles.dropdownContainer}>
+                {filteredCities.map((item, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    onPress={() => handleCitySelect(item)}
+                    style={{
+                      padding: 12,
+                      borderBottomWidth:
+                        index === filteredCities.length - 1 ? 0 : 1,
+                      borderBottomColor: "#eee",
+                    }}
+                  >
+                    <Text>{item}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </View>
+
           <TouchableOpacity onPress={handleJoinExistingGroup}>
             <LinearGradient
               colors={["#2196F3", "#0D47A1"]}
@@ -185,6 +280,47 @@ const styles = StyleSheet.create({
     color: "#333333",
     textAlign: "center",
     marginBottom: 12,
+  },
+  // New styles for destination and city input
+  destinationContainer: {
+    width: 220,
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  labelContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "center",
+    marginBottom: 8,
+  },
+  cityInputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F5F5F5",
+    borderWidth: 1,
+    borderColor: "#EEEEEE",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    width: "100%",
+  },
+  cityInput: {
+    paddingVertical: 12,
+    fontSize: 16,
+    color: "#333333",
+    flex: 1,
+  },
+  inputIcon: {
+    marginRight: 8,
+  },
+  dropdownContainer: {
+    position: "absolute",
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#eee",
+    borderRadius: 8,
+    top: 80,
+    width: "100%",
+    zIndex: 1000,
   },
   button: {
     borderRadius: 12,

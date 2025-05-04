@@ -7,7 +7,7 @@ export function useJoiningGroup() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const joinGroup = async (groupId: number): Promise<boolean> => {
+  const joinGroup = async (groupId: number, city: string): Promise<boolean> => {
     const email = await AsyncStorage.getItem("userEmail");
 
     if (!email) {
@@ -21,7 +21,7 @@ export function useJoiningGroup() {
 
     try {
       const response = await fetch(
-        `${apiUrl}/groups/join?group_id=${groupId}&email=${email}&ori=Barna`,
+        `${apiUrl}/groups/join?group_id=${groupId}&email=${email}&ori=${city}`,
         {
           method: "POST",
         }
