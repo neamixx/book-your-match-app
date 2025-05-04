@@ -13,7 +13,7 @@ import * as ClipboardAPI from "expo-clipboard";
 
 type InvitationModalProps = {
   visible: boolean;
-  code: string;
+  code: string | number;
   onClose: () => void;
 };
 
@@ -23,7 +23,7 @@ export default function InvitationModal({
   onClose,
 }: InvitationModalProps) {
   const copyToClipboard = () => {
-    ClipboardAPI.setStringAsync(code);
+    ClipboardAPI.setStringAsync(code.toString());
   };
 
   return (

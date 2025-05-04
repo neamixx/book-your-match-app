@@ -7,6 +7,7 @@ type CreateGroupParams = {
   description: string;
   data_ini: string;
   data_fi: string;
+  city: string;
 };
 
 export function useGroupCreation() {
@@ -18,6 +19,7 @@ export function useGroupCreation() {
     description,
     data_ini,
     data_fi,
+    city,
   }: CreateGroupParams) => {
     setLoading(true);
     setError(null);
@@ -32,18 +34,21 @@ export function useGroupCreation() {
     }
 
     try {
-      const response = await fetch(`${apiUrl}/groups/create?email=${email}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name,
-          description,
-          data_ini,
-          data_fi,
-        }),
-      });
+      const response = await fetch(
+        `${apiUrl}/groups/create?email=${email}&ori=${city}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name,
+            description,
+            data_ini,
+            data_fi,
+          }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Error creant el grup");
@@ -57,7 +62,7 @@ export function useGroupCreation() {
       console.error(err);
       setError("Error de connexió o creació");
       setLoading(false);
-      return null;
+      return false;
     }
   };
 
