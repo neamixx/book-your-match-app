@@ -133,6 +133,7 @@ export default function CreateGroupModal({
         data_ini: formattedIni,
         data_fi: formattedFi,
         city: city || "Barcelona",
+        num_mem: Number(numPeople) || 1,
       });
 
       if (data) {
@@ -296,7 +297,7 @@ export default function CreateGroupModal({
                         style={styles.inputIcon}
                       />
                       <TextInput
-                        placeholder="Selecciona una ciutat"
+                        placeholder=""
                         style={styles.input}
                         value={city}
                         onChangeText={handleCityChange}

@@ -15,7 +15,6 @@ export function useCities() {
         }
 
         const data = await response.json();
-        console.log("Fetched cities:", data);
 
         // Map city names
         const cityNames = data.map((city: any) => city.name);

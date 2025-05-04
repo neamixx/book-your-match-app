@@ -9,7 +9,6 @@ type FlightCardProps = {
   arrivalTime: string;
   departureAirport: string;
   arrivalAirport: string;
-  duration: string;
   direct: boolean;
   price: string;
   link: string; // Link extern (pàgina web)
@@ -21,7 +20,6 @@ export default function FlightTicket({
   arrivalTime,
   departureAirport,
   arrivalAirport,
-  duration,
   direct,
   price,
   link,
@@ -48,10 +46,6 @@ export default function FlightTicket({
         </View>
 
         <View style={styles.flightPathContainer}>
-          <View style={styles.durationContainer}>
-            <Text style={styles.duration}>{duration}</Text>
-          </View>
-
           <View style={styles.flightPath}>
             <View style={styles.line} />
             <View style={styles.planeContainer}>

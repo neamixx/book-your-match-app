@@ -216,7 +216,7 @@ export default function CreateJoinGroup({
                       style={styles.inputIcon}
                     />
                     <TextInput
-                      placeholder="Selecciona una ciutat"
+                      placeholder="Enter departure city"
                       style={styles.input}
                       value={city}
                       onChangeText={handleCityChange}
@@ -261,7 +261,7 @@ export default function CreateJoinGroup({
                       end={{ x: 1, y: 1 }}
                       style={styles.button}
                     >
-                      <Text style={styles.buttonText}>Unir-se al grup</Text>
+                      <Text style={styles.buttonText}>Join group</Text>
                     </LinearGradient>
                   </TouchableOpacity>
 

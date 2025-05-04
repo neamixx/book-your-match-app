@@ -8,6 +8,7 @@ type CreateGroupParams = {
   data_ini: string;
   data_fi: string;
   city: string;
+  num_mem: number;
 };
 
 export function useGroupCreation() {
@@ -20,6 +21,7 @@ export function useGroupCreation() {
     data_ini,
     data_fi,
     city,
+    num_mem,
   }: CreateGroupParams) => {
     setLoading(true);
     setError(null);
@@ -35,17 +37,18 @@ export function useGroupCreation() {
 
     try {
       const response = await fetch(
-        `${apiUrl}/groups/create?email=${email}&ori=${city}`,
+        `${apiUrl}/groups/create?email=${email}&ori=${city}&`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            name,
+            num_mem,
             description,
             data_ini,
             data_fi,
+            name,
           }),
         }
       );

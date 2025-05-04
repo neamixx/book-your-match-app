@@ -5,13 +5,12 @@ import { Text, View } from "@/components/Themed";
 import Card from "@/components/Card";
 import Constants from "expo-constants";
 
-import Constants from "expo-constants";
 const apiUrl = Constants.expoConfig?.extra?.API_URL;
 
 export default function Swap() {
   const [cards, setCards] = useState<
     { id: number; tittle: string; image: string }[]
-  >([]);
+  >([{ id: 1, tittle: "Beach", image: "Beach.jpg" }]);
 
   const countRef = useRef(0);
   const apiUrl = Constants.expoConfig?.extra?.API_URL;
@@ -66,10 +65,10 @@ export default function Swap() {
       </Text>
       {cards.map((element, index) => (
         <Card
-          identifier={element.id}
+          identifier={element?.id || 1}
           key={(countRef.current += 1)}
-          tittle={element.tittle}
-          img={element.image}
+          tittle={element?.tittle || "Sorprises"}
+          img={element?.image || "Hackathon.jpeg"}
           offset={0}
           onExit={onExit}
         />

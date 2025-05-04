@@ -22,7 +22,7 @@ const { width, height } = Dimensions.get("window");
 
 const GroupScreen: React.FC = () => {
   const { id } = useLocalSearchParams();
-  const { state, group } = useGroup();
+  const { state, group, getFlights, flight1, flight2 } = useGroup(Number(id));
   const router = useRouter();
   if (!state) {
     return (
@@ -34,8 +34,8 @@ const GroupScreen: React.FC = () => {
           end={{ x: 1, y: 1 }}
           style={styles.noDataHeader}
         >
-          <Text style={styles.noDataHeaderTitle}>{group.name}</Text>
-          <Text style={styles.noDataHeaderSubtitle}>{group.description}</Text>
+          <Text style={styles.noDataHeaderTitle}>{group?.name}</Text>
+          <Text style={styles.noDataHeaderSubtitle}>{group?.description}</Text>
         </LinearGradient>
 
         {/* Content */}
@@ -114,16 +114,16 @@ const GroupScreen: React.FC = () => {
           <RNView style={styles.titleContainer}>
             <RNView style={styles.titleTextContainer}>
               <Text style={styles.subtitle}>Travel Group</Text>
-              <Text style={styles.title}>Barcelona Trip {id}</Text>
+              <Text style={styles.title}>{flight1?.city}</Text>
               <Text style={styles.description}>
-                Your upcoming flights for this journey
+                Your upcoming flight for this journey
               </Text>
             </RNView>
           </RNView>
 
           <RNView style={styles.ticketsContainer}>
             <RNView style={styles.ticketsHeader}>
-              <Text style={styles.ticketsTitle}>Your Flights</Text>
+              <Text style={styles.ticketsTitle}>Your Flight</Text>
             </RNView>
 
             <ScrollView
@@ -131,27 +131,18 @@ const GroupScreen: React.FC = () => {
               showsVerticalScrollIndicator={false}
             >
               <FlightTicket
-                airlineLogo="https://logo.clearbit.com/iberia.com"
-                departureTime="10:00"
-                arrivalTime="12:00"
-                departureAirport="BCN"
-                arrivalAirport="MAD"
-                duration="2h 0m"
-                direct={true}
-                price="€100"
-                link="https://www.iberia.com/"
-              />
-
-              <FlightTicket
-                airlineLogo="https://logo.clearbit.com/vueling.com"
-                departureTime="18:30"
-                arrivalTime="20:15"
-                departureAirport="MAD"
-                arrivalAirport="BCN"
-                duration="1h 45m"
-                direct={true}
-                price="€85"
-                link="https://www.vueling.com/"
+                airlineLogo={`https://logo.clearbit.com/${flight1?.company?.toLowerCase()}.com`}
+                departureTime={flight1?.departureDatetime || "10:00"}
+                arrivalTime={flight1?.arrivalDatetime || "12:00"}
+                departureAirport={flight1?.origin ? flight1.origin : "BCN"}
+                arrivalAirport={flight1?.destination || "MAD"}
+                direct={flight1?.stops > 1 ? false : true}
+                price={`${flight1?.price ?? "100"}€`}
+                link={
+                  typeof flight1?.link === "string"
+                    ? flight1.link
+                    : "https://www.skyscanner.com/"
+                }
               />
             </ScrollView>
           </RNView>

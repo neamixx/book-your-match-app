@@ -11,36 +11,117 @@ type Group = {
   admin_id: number;
   state: string;
 };
-export function useGroup() {
-  const [group, setGroup] = useState<Group>({
-    id: 1,
-    name: "Grup 1",
-    description: "Descripció del grup 1",
-    admin_id: 1,
-    state: "active",
-  });
+
+type Flight = {
+  id: string;
+  price: number;
+  link: string;
+  departureDatetime: string;
+  arrivalDatetime: string;
+  company: string;
+  origin: string;
+  destination: string;
+  stops: number;
+  city: string;
+  image_path: string;
+};
+
+export function useGroup(id: number) {
+  const [group, setGroup] = useState<Group | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const state = false;
-  const getFlights = async () => {
+  const [state, setState] = useState("");
+  const [flights, setFlights] = useState<Flight[]>([]);
+
+  const [data, setData] = useState({
+    data_ini: "",
+    data_fi: "",
+    city: "",
+    num_mem: 0,
+    description: "",
+    name: "",
+    state: "",
+  });
+  const fetchGroup = async () => {
     const email = await AsyncStorage.getItem("userEmail");
     if (!email) return;
+
     setLoading(true);
     setError(null);
+
     try {
-      const response = await fetch(`${apiUrl}/groups/by-user/${email}`);
+      console.log(id);
+      const response = await fetch(`${apiUrl}/groups/group/${id}`);
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      const data: Group[] = await response.json();
-      //setGroups(data);
+      const data = await response.json();
+      setData(data);
+      setGroup(data);
     } catch (err) {
       console.error(err);
-      setError("Error carregant els grups");
+      setError("Error carregant el grup");
     } finally {
       setLoading(false);
     }
   };
 
-  return { group, loading, error, getFlights, state };
+  useEffect(() => {
+    fetchGroup();
+    if (data.state == "READY") {
+      console.log("state", data.state);
+      getFlights();
+    }
+  }, [id, data.state]);
+
+  const getFlights = async () => {
+    const email = await AsyncStorage.getItem("userEmail");
+    console.log("email", email);
+    console.log("id", id);
+    setLoading(true);
+    setError(null);
+
+    try {
+      const json = JSON.stringify({
+        group_id: id,
+        email: email,
+      });
+      console.log("json", json);
+      const response = await fetch(`${apiUrl}/skyscanner/cheapest-flights`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: json,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log(data);
+      const flight1 = data;
+      setFlights((d) => data.cheapest_flights);
+    } catch (err) {
+      console.error(err);
+      setError("Error carregant els vols");
+    } finally {
+      setLoading(false);
+    }
+  };
+  const flight2 = flights[1] || null;
+  const flight1 = flights[0];
+  console.log(flight1);
+  return {
+    group,
+    loading,
+    error,
+    getFlights,
+    flights,
+    state: data.state === "READY" ? true : false,
+    flight1,
+    flight2,
+  };
 }
